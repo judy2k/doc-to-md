@@ -12,11 +12,11 @@ from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
 from cssutils import CSSParser
+import mdformat
 
 
 def is_code_font(f: str):
-    if f.strip().strip("'\"").lower() in {"fira mono", "roboto mono"}:
-        return True
+    return f.strip().strip("'\"").lower() in {"fira mono", "roboto mono", "source code pro", "courier new"}
 
 
 def extract_code_styles(soup: BeautifulSoup) -> List[str]:
@@ -28,6 +28,7 @@ def extract_code_styles(soup: BeautifulSoup) -> List[str]:
             for s in rule.style.getProperties(name="font-family"):
                 if is_code_font(s.value):
                     result.add(rule.selectorText.strip().strip("."))
+    debug(f"Code classes: {', '.join(result)}")
     return result
 
 
@@ -35,18 +36,21 @@ def fix_code_blocks(soup: BeautifulSoup):
     code_styles = extract_code_styles(soup)
     for span in soup.find_all(class_=code_styles):
         p = span.parent
-        if p.name in {"p", "div"} and len(p.contents) == 1:
-            prev = p.previous_sibling
-            text = str(p.string if p.string else "")
-            if prev is None or prev.name != "pre":
-                # Hoist the '.string' content up to this level (remove 'span') and make it a 'pre'
-                p.name = "pre"
-                p.string = text
+        if p.name in {"p", "div"}:
+            if len(p.contents) == 1:  # Is it a line from a code BLOCK
+                prev = p.previous_sibling
+                text = str(p.string if p.string else "")
+                if prev is None or prev.name != "pre":
+                    # Hoist the '.string' content up to this level (remove 'span') and make it a 'pre'
+                    p.name = "pre"
+                    p.string = text
+                else:
+                    # prev is a 'pre' element - append the current '.string' to it (maybe with line break.)
+                    prev.extend(["\r\n", text])
+                    # Delete p
+                    p.decompose()
             else:
-                # prev is a 'pre' element - append the current '.string' to it (maybe with line break.)
-                prev.extend(["\r\n", text])
-                # Delete p
-                p.decompose()
+                span.name = 'code'
 
 
 def fix_google_links(soup: BeautifulSoup):
@@ -103,7 +107,7 @@ def main(argv=sys.argv[1:]):
     ap.add_argument("input", type=Path)
     ap.add_argument("output", type=Path)
     ap.add_argument("--no-pandoc", action="store_true")
-    ap.add_argument("-v", "--verbose", action='count', default=0)
+    ap.add_argument("-v", "--verbose", action="count", default=0)
 
     args = ap.parse_args(argv)
 
@@ -125,7 +129,7 @@ def main(argv=sys.argv[1:]):
     remove_empty_paras(soup)
 
     if args.no_pandoc:
-        print("No pandoc")
+        info("No pandoc")
         output_path.write_text(str(soup))
     else:
         pandoc = Popen(
@@ -144,8 +148,6 @@ def main(argv=sys.argv[1:]):
 
         pandoc.communicate(input=str(soup))
         pandoc.wait()
-
-        import mdformat
 
         mdformat.file(output_path)
 
