@@ -77,15 +77,30 @@ def identify_code_blocks(soup: BeautifulSoup):
 
 
 def fix_backticks(soup: BeautifulSoup):
-    for tag in soup.find_all(True, string=re.compile(r"\`")):
-        tag.string = re.sub(r"\`", "`", tag.string)
+    soup.smooth()  # Relies on adjacent strings being concatenated.
+    for tag in soup.find_all(True, string=re.compile(r"`")):
+        new_contents = (
+            BeautifulSoup(re.sub(r"`(.*?)`", r"<code>\1</code>", tag.string), "lxml")
+            .html.body.p.extract()
+            .contents
+        )
+        tag.clear()
+        tag.extend(new_contents)
+
+
+def remove_empty_paras(soup: BeautifulSoup):
+    for tag in soup.find_all("span"):
+        tag.unwrap()
+
+    for tag in soup.find_all(lambda tag: tag.name == 'p' and not tag.contents):
+        tag.unwrap()
 
 
 def main(argv=sys.argv[1:]):
     ap = ArgumentParser()
     ap.add_argument("input", type=Path)
     ap.add_argument("output", type=Path)
-    ap.add_argument("--no-pandoc", action='store_true')
+    ap.add_argument("--no-pandoc", action="store_true")
 
     args = ap.parse_args(argv)
 
@@ -100,9 +115,11 @@ def main(argv=sys.argv[1:]):
     remove_styles(soup)
     identify_code_blocks(soup)
     fix_backticks(soup)
+    remove_empty_paras(soup)
 
     if args.no_pandoc:
-        output_path.write_text(soup.prettify())
+        print("No pandoc")
+        output_path.write_text(str(soup))
     else:
         pandoc = Popen(
             [
@@ -118,8 +135,11 @@ def main(argv=sys.argv[1:]):
             text=True,
         )
 
-        pandoc.communicate(input=soup.prettify())
+        pandoc.communicate(input=str(soup))
         pandoc.wait()
+
+        import mdformat
+        mdformat.file(output_path)
 
 
 if __name__ == "__main__":
