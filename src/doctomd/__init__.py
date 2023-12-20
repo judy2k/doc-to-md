@@ -114,10 +114,6 @@ def main(argv=sys.argv[1:]):
     path: Path = args.input
     output_path: Path = args.output
 
-    debug("This is a debug message")
-    info("This is a info message")
-    warn("This is a warn message")
-
     soup = BeautifulSoup(path.read_text(), "lxml")
     fix_code_blocks(soup)
     fix_google_links(soup)
