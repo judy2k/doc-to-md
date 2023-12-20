@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
+import logging
+from logging import debug, info, warn
 from pathlib import Path
 import re
 from subprocess import Popen, PIPE
@@ -13,7 +15,7 @@ from cssutils import CSSParser
 
 
 def is_code_font(f: str):
-    if f.strip().strip("'\"").lower() == "fira mono":
+    if f.strip().strip("'\"").lower() in {"fira mono", "roboto mono"}:
         return True
 
 
@@ -92,7 +94,7 @@ def remove_empty_paras(soup: BeautifulSoup):
     for tag in soup.find_all("span"):
         tag.unwrap()
 
-    for tag in soup.find_all(lambda tag: tag.name == 'p' and not tag.contents):
+    for tag in soup.find_all(lambda tag: tag.name == "p" and not tag.contents):
         tag.unwrap()
 
 
@@ -101,11 +103,20 @@ def main(argv=sys.argv[1:]):
     ap.add_argument("input", type=Path)
     ap.add_argument("output", type=Path)
     ap.add_argument("--no-pandoc", action="store_true")
+    ap.add_argument("-v", "--verbose", action='count', default=0)
 
     args = ap.parse_args(argv)
 
+    log_level = {0: logging.WARN, 1: logging.INFO}.get(args.verbose, logging.DEBUG)
+
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=log_level)
+
     path: Path = args.input
     output_path: Path = args.output
+
+    debug("This is a debug message")
+    info("This is a info message")
+    warn("This is a warn message")
 
     soup = BeautifulSoup(path.read_text(), "lxml")
     fix_code_blocks(soup)
@@ -139,6 +150,7 @@ def main(argv=sys.argv[1:]):
         pandoc.wait()
 
         import mdformat
+
         mdformat.file(output_path)
 
 

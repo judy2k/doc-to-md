@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "doctomd"
+version = "0.0.1"
+authors = [
+  { name="Mark Smith", email="mark.smith@mongodb.com" },
+]
+description = "A utility to generate markdown for ContentStack."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Private :: Do Not Upload",
+]
+dependencies = [
+    "beautifulsoup4 ~= 4.12.2",
+    "cssutils ~= 2.9.0",
+    "mdformat ~= 0.7.17",
+    "lxml ~= 4.9.3"
+]
+
+[project.urls]
+Homepage = "https://github.com/mongodb-developer/doc-to-markdown"
+Issues = "https://github.com/mongodb-developer/doc-to-markdown/issues"
+
+[project.scripts]
+doc2md = "doctomd:main"
