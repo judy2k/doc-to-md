@@ -15,26 +15,60 @@ from cssutils import CSSParser
 import mdformat
 
 
+CSS_PARSER = CSSParser()
+
+
 def is_code_font(f: str):
-    return f.strip().strip("'\"").lower() in {"fira mono", "roboto mono", "source code pro", "courier new"}
+    return f.strip().strip("'\"").lower() in {
+        "fira mono",
+        "roboto mono",
+        "source code pro",
+        "courier new",
+    }
 
 
 def extract_code_styles(soup: BeautifulSoup) -> List[str]:
     result = set()
     for st in soup.find_all("style"):
-        sheet = CSSParser().parseString(st.string)
+        sheet = CSS_PARSER.parseString(st.string)
         for rule in sheet.cssRules.rulesOfType(1):
             # See if it contains a font-family rule:
             for s in rule.style.getProperties(name="font-family"):
                 if is_code_font(s.value):
                     result.add(rule.selectorText.strip().strip("."))
-    debug(f"Code classes: {', '.join(result)}")
+    debug(f"Code classes in HTML: {', '.join(result)}")
     return result
+
+
+def extract_span_styles(soup: BeautifulSoup):
+    result = {}
+    for st in soup.find_all("style"):
+        sheet = CSS_PARSER.parseString(st.string)
+        for rule in sheet.cssRules.rulesOfType(1):
+            for s in rule.style.getProperties(name="font-weight"):
+                if int(s.value) > 400:
+                    result.setdefault("b", []).append(
+                        rule.selectorText.strip().strip(".")
+                    )
+            for s in rule.style.getProperties(name="font-style"):
+                if s.value == "italic":
+                    result.setdefault("i", []).append(
+                        rule.selectorText.strip().strip(".")
+                    )
+    debug(f"Span style classes: {', '.join(result)}")
+    return result
+
+
+def replace_style_spans(soup: BeautifulSoup):
+    span_styles = extract_span_styles(soup)
+    for new_tag, span_styles in span_styles.items():
+        for span in soup.find_all("span", class_=span_styles):
+            span.name = new_tag
 
 
 def fix_code_blocks(soup: BeautifulSoup):
     code_styles = extract_code_styles(soup)
-    for span in soup.find_all(class_=code_styles):
+    for span in soup.find_all("span", class_=code_styles):
         p = span.parent
         if p.name in {"p", "div"}:
             if len(p.contents) == 1:  # Is it a line from a code BLOCK
@@ -50,7 +84,7 @@ def fix_code_blocks(soup: BeautifulSoup):
                     # Delete p
                     p.decompose()
             else:
-                span.name = 'code'
+                span.name = "code"
 
 
 def fix_google_links(soup: BeautifulSoup):
@@ -114,12 +148,14 @@ def main(argv=sys.argv[1:]):
     log_level = {0: logging.WARN, 1: logging.INFO}.get(args.verbose, logging.DEBUG)
 
     logging.basicConfig(format="%(levelname)s: %(message)s", level=log_level)
+    logging.getLogger("markdown_it").setLevel(logging.WARN)
 
     path: Path = args.input
     output_path: Path = args.output
 
     soup = BeautifulSoup(path.read_text(), "lxml")
     fix_code_blocks(soup)
+    replace_style_spans(soup)
     fix_google_links(soup)
     remove_ids(soup)
     remove_classes(soup)
