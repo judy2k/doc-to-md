@@ -5,7 +5,7 @@ Markdown that's suitable for pasting into ContentStack.
 
 ## What does it actually do?
 
-- Firstly, the script will identify any code blocks (formatted using Fira Code, Roboto Mono, Source Code Pro, or Courier New) and will identify them as code blocks in the resulting Markdown.
+- Firstly, the script will identify any code blocks (formatted using Fira Code, Roboto Mono, Source Code Pro, or Courier New) and will mark them as code blocks in the resulting Markdown.
 - Some basic heuristics are used to annotate code blocks as python code
 - Inline code can be correctly identified using backticks (the same as Markdown itself) or formatting (any spans marked with a code font).
 - Empty paragraphs are removed
@@ -15,10 +15,12 @@ Markdown that's suitable for pasting into ContentStack.
 ## Installation
 
 ```
-# These assume you are running a Mac:
-brew install pandoc
+brew install pandoc    # <- MacOS or Linuxbrew
+# apt install pandoc   # <- Debian/Ubuntu
+# choco install pandoc # <- Windows with Chocolatey
+# ... or see here for more instructions: https://pandoc.org/installing.html
 
-python -m pip install git+https://github.com/judy2k/doc-to-md.git
+python -m pip install --upgrade git+https://github.com/judy2k/doc-to-md.git
 ```
 
 ## Usage
@@ -32,10 +34,11 @@ First, download your Google Doc as a Web Page.
 Unzip the archive, and then in the command-line, run something like the following:
 
 ```
+# Create a new Markdown file from an existing Google Docs HTML file:
 doc2md /PATH/TO/INPUT.HTML /PATH/TO/OUTPUT.MD
 ```
 
-This should produce a nice, clean, formatted Markdown file, suitable for copying into ContentStack.
+This should produce a clean, formatted Markdown file, suitable for copying into ContentStack.
 You will, sadly, still have to import all your images and insert them in the correct locations yourself.
 
 ## To-Do
