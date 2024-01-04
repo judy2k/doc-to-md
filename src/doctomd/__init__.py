@@ -145,7 +145,7 @@ def main(argv=sys.argv[1:]):
         description=__doc__)
     ap.add_argument("input", type=Path)
     ap.add_argument("output", type=Path)
-    ap.add_argument("--no-pandoc", action="store_true")
+    ap.add_argument("--no-pandoc", action="store_true", help="Output will be cleaned HTML instead of Markdown. This option is primarily for debugging.")
     ap.add_argument("-v", "--verbose", action="count", default=0, help="Increase the amount of output describing the operation of doc2md. This flag can be repeated to increase verbosity even more.")
 
     args = ap.parse_args(argv)
@@ -190,7 +190,9 @@ def main(argv=sys.argv[1:]):
         pandoc.communicate(input=str(soup))
         pandoc.wait()
 
-        mdformat.file(output_path)
+        mdformat.file(output_path, options={
+            'wrap': 'no',
+        })
 
 
 if __name__ == "__main__":
