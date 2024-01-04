@@ -141,12 +141,26 @@ def remove_empty_paras(soup: BeautifulSoup):
 
 
 def main(argv=sys.argv[1:]):
-    ap = ArgumentParser(prog='doc2md',
-        description=__doc__)
+    ap = ArgumentParser(prog="doc2md", description=__doc__)
     ap.add_argument("input", type=Path)
     ap.add_argument("output", type=Path)
-    ap.add_argument("--no-pandoc", action="store_true", help="Output will be cleaned HTML instead of Markdown. This option is primarily for debugging.")
-    ap.add_argument("-v", "--verbose", action="count", default=0, help="Increase the amount of output describing the operation of doc2md. This flag can be repeated to increase verbosity even more.")
+    ap.add_argument(
+        "--no-pandoc",
+        action="store_true",
+        help="Output will be cleaned HTML instead of Markdown. This option is primarily for debugging.",
+    )
+    ap.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Increase the amount of output describing the operation of doc2md. This flag can be repeated to increase verbosity even more.",
+    )
+    ap.add_argument(
+        "--no-format",
+        action="store_true",
+        help="Output will not be reformatted with mdformat. If --no-pandoc is supplied, then this option does nothing.",
+    )
 
     args = ap.parse_args(argv)
 
@@ -177,7 +191,7 @@ def main(argv=sys.argv[1:]):
             [
                 "pandoc",
                 "--to",
-                "markdown-raw_html-native_divs",
+                "gfm-raw_html+pipe_tables",
                 "-f",
                 "html-native_divs-native_spans-raw_html",
                 "-o",
@@ -190,9 +204,14 @@ def main(argv=sys.argv[1:]):
         pandoc.communicate(input=str(soup))
         pandoc.wait()
 
-        mdformat.file(output_path, options={
-            'wrap': 'no',
-        })
+        if not args.no_format:
+            mdformat.file(
+                output_path,
+                options={
+                    "wrap": "no",
+                },
+                extensions={"gfm"},
+            )
 
 
 if __name__ == "__main__":

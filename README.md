@@ -5,12 +5,21 @@ Markdown that's suitable for pasting into ContentStack.
 
 ## What does it actually do?
 
-- Firstly, the script will identify any code blocks (formatted using Fira Code, Roboto Mono, Source Code Pro, or Courier New) and will mark them as code blocks in the resulting Markdown.
-- Some basic heuristics are used to annotate code blocks as python code
-- Inline code can be correctly identified using backticks (the same as Markdown itself) or formatting (any spans marked with a code font).
+`doc2md` can convert HTML exported from Google Docs into clean Markdown documents for pasting into ContentStack, with the following features:
+
+- Code!
+  - Firstly, the script will identify any code blocks (formatted using Fira Code, Roboto Mono, Source Code Pro, or Courier New) and will mark them as code blocks in the resulting Markdown.
+  - Some basic heuristics are used to annotate code blocks as python code
+  - Inline code can be correctly identified using backticks (the same as Markdown itself) or formatting (any spans marked with a code font).
 - Empty paragraphs are removed
 - Hyperlinks are correctly extracted from Google's nasty tracking links.
 - Bold and italic formatting is maintained where possible.
+- Supports tables!
+
+### Not (currently) Supported
+
+- Images - I can't currently think of a good way to make image upload into ContentStack more seamless, without API access to ContentStack itself. 
+- See the [To Do](#to-do) section.
 
 ## Installation
 
@@ -44,9 +53,24 @@ doc2md /PATH/TO/INPUT.HTML /PATH/TO/OUTPUT.MD
 This should produce a clean, formatted Markdown file, suitable for copying into ContentStack.
 You will, sadly, still have to import all your images and insert them in the correct locations yourself.
 
+### Tables
+
+Tables are supported by doc2md, and are exported to GFM table format.
+This hasn't been _widely_ tested.
+
+If your table doesn't have a header row, then a blank one will be inserted,
+which is probably not what you want.
+To mark a header row in Google Docs,
+hover over the row and click on the pin icon that appears to the left.
+
+![Marking a header row in Google Docs.](images/mark_header_row.png)
+
 ## To-Do
 
 - ContentStack doesn't support `--` and `---` so replace them (outside of code blocks!) with n-dash and m-dash characters.
-- Resulting Markdown occasionally includes backslash followed by line-break characters. Need to identify why it's happening and fix.
+- Resulting Markdown occasionally includes a backslash followed by line-break character. Need to identify why it's happening and fix.
 - Is there a way to manage images better?
 - Can captions in the doc automatically be applied to the associated image?
+
+--------
+Made with 💚 for my colleagues at MongoDB by Judy2k.
