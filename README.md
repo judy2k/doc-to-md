@@ -21,6 +21,9 @@ brew install pandoc    # <- MacOS or Linuxbrew
 # ... or see here for more instructions: https://pandoc.org/installing.html
 
 python -m pip install --upgrade git+https://github.com/judy2k/doc-to-md.git
+
+# Check that it worked:
+doc2md --help
 ```
 
 ## Usage
@@ -43,7 +46,7 @@ You will, sadly, still have to import all your images and insert them in the cor
 
 ## To-Do
 
+- ContentStack doesn't support `--` and `---` so replace them (outside of code blocks!) with n-dash and m-dash characters.
+- Resulting Markdown occasionally includes backslash followed by line-break characters. Need to identify why it's happening and fix.
 - Is there a way to manage images better?
 - Can captions in the doc automatically be applied to the associated image?
-- Replace ndash in code with --
-- Handle -- (ndash) and --- (mdash) in resulting Markdown. Are these supported by ContentStack?
