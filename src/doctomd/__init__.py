@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+A small command-line utility for converting Google Docs documents to Markdown that's suitable for pasting into ContentStack.
+"""
+
 from argparse import ArgumentParser
 import logging
 from logging import debug, info, warn
@@ -66,7 +70,7 @@ def replace_style_spans(soup: BeautifulSoup):
             span.name = new_tag
 
 
-def fix_code_blocks(soup: BeautifulSoup):
+def mark_code_blocks(soup: BeautifulSoup):
     code_styles = extract_code_styles(soup)
     for span in soup.find_all("span", class_=code_styles):
         p = span.parent
@@ -137,11 +141,12 @@ def remove_empty_paras(soup: BeautifulSoup):
 
 
 def main(argv=sys.argv[1:]):
-    ap = ArgumentParser()
+    ap = ArgumentParser(prog='doc2md',
+        description=__doc__)
     ap.add_argument("input", type=Path)
     ap.add_argument("output", type=Path)
     ap.add_argument("--no-pandoc", action="store_true")
-    ap.add_argument("-v", "--verbose", action="count", default=0)
+    ap.add_argument("-v", "--verbose", action="count", default=0, help="Increase the amount of output describing the operation of doc2md. This flag can be repeated to increase verbosity even more.")
 
     args = ap.parse_args(argv)
 
@@ -154,7 +159,7 @@ def main(argv=sys.argv[1:]):
     output_path: Path = args.output
 
     soup = BeautifulSoup(path.read_text(), "lxml")
-    fix_code_blocks(soup)
+    mark_code_blocks(soup)
     replace_style_spans(soup)
     fix_google_links(soup)
     remove_ids(soup)
