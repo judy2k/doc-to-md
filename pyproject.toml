@@ -29,4 +29,4 @@ Homepage = "https://github.com/judy2k/doc-to-md"
 Issues = "https://github.com/judy2k/doc-to-md/issues"
 
 [project.scripts]
-doc2md = "doctomd:main"
+doc2md = "doctomd.cli:main"

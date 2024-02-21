@@ -4,34 +4,51 @@
 A small command-line utility for converting Google Docs documents to Markdown that's suitable for pasting into ContentStack.
 """
 
-from argparse import ArgumentParser
-import logging
-from logging import debug, info, warn
-from pathlib import Path
+from logging import debug
 import re
-from subprocess import Popen, PIPE
-import sys
+
 from typing import List
 from urllib.parse import urlparse, parse_qs
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from cssutils import CSSParser
-import mdformat
 
 
 CSS_PARSER = CSSParser()
 
 
 def is_code_font(f: str):
+    """
+    Determines if the font name provided as `f` is considered to be a code font.
+    """
     return f.strip().strip("'\"").lower() in {
         "fira mono",
         "roboto mono",
         "source code pro",
         "courier new",
+        "consolas",
     }
 
 
+def remove_single_cell_tables(soup: BeautifulSoup):
+    """
+    Identify single cell tables, and replace them with their cell's contents.
+    """
+    for table in soup.find_all("table"):
+        rows = table.find_all("tr")
+        if len(rows) == 1:
+            cells = rows[0].find_all("td")
+            if len(cells) == 1:
+                cells[0].unwrap()
+                rows[0].unwrap()
+                table.unwrap()
+
+
 def extract_code_styles(soup: BeautifulSoup) -> List[str]:
+    """
+    Identify the styles in the stylesheet that specify fixed-width fonts,
+    and create a list of these "code" classes.
+    """
     result = set()
     for st in soup.find_all("style"):
         sheet = CSS_PARSER.parseString(st.string)
@@ -45,6 +62,14 @@ def extract_code_styles(soup: BeautifulSoup) -> List[str]:
 
 
 def extract_span_styles(soup: BeautifulSoup):
+    """
+    Some <span> tags are for marking what should be <b> or <i>.
+
+    This function goes through all the defined classes, determining which should
+    be considered "bold" or "italic" classes, and then returns a dict with the
+    keys "b" and "i",
+    with each value being a list of classes that match this classification.
+    """
     result = {}
     for st in soup.find_all("style"):
         sheet = CSS_PARSER.parseString(st.string)
@@ -64,6 +89,10 @@ def extract_span_styles(soup: BeautifulSoup):
 
 
 def replace_style_spans(soup: BeautifulSoup):
+    """
+    Locate all spans that should be replaced with <b> or <i> tags,
+    and make the fix.
+    """
     span_styles = extract_span_styles(soup)
     for new_tag, span_styles in span_styles.items():
         for span in soup.find_all("span", class_=span_styles):
@@ -71,10 +100,14 @@ def replace_style_spans(soup: BeautifulSoup):
 
 
 def mark_code_blocks(soup: BeautifulSoup):
+    """
+    Attempts to find consecutive lines of code and concatenate them into a single
+    code block contained within a <pre> tag.
+    """
     code_styles = extract_code_styles(soup)
     for span in soup.find_all("span", class_=code_styles):
         p = span.parent
-        if p.name in {"p", "div"}:
+        if p.name in {"p", "div", "td"}:
             if len(p.contents) == 1:  # Is it a line from a code BLOCK
                 prev = p.previous_sibling
                 text = str(p.string if p.string else "")
@@ -88,10 +121,42 @@ def mark_code_blocks(soup: BeautifulSoup):
                     # Delete p
                     p.decompose()
             else:
-                span.name = "code"
+                # If the previous element is a <code>, append this, otherwise mark it as a <code> itself.
+                prev = span.previous_sibling
+                if prev is not None and prev.name == "code":
+                    # Append to previous code block:
+                    prev.extend(span.contents)
+                    span.decompose()
+                else:
+                    span.name = "code"
+
+    soup.smooth()
+    # Sometimes the formatting results in a paragraph containing a single <code> tag.
+    # Let's see what we can do.
+    for code in soup.find_all("code"):
+        # If there's a <br/> in the code span, then it should be a <pre>:
+        if code.find_all("br"):
+            for item in code.contents:
+                if isinstance(item, Tag):
+                    if item.name == "br":
+                        item.replace_with("\n")
+
+        p = code.parent
+        if p.name in {"p", "div", "td"}:
+            if len(p.contents) == 1:  # Is it a line from a code BLOCK
+                code.unwrap()
+                p.name = "pre"
+
+    # for p in soup.find_all("p"):
+
+    # for pre in soup.find_all("pre"):
+    #     pre.smooth()
 
 
 def fix_google_links(soup: BeautifulSoup):
+    """
+    Google does this horrible link redirection thing. Fix it.
+    """
     for link in soup.find_all(
         "a", attrs={"href": re.compile(r"https:\/\/www.google.com\/url")}
     ):
@@ -138,81 +203,3 @@ def remove_empty_paras(soup: BeautifulSoup):
 
     for tag in soup.find_all(lambda tag: tag.name == "p" and not tag.contents):
         tag.unwrap()
-
-
-def main(argv=sys.argv[1:]):
-    ap = ArgumentParser(prog="doc2md", description=__doc__)
-    ap.add_argument("input", type=Path)
-    ap.add_argument("output", type=Path)
-    ap.add_argument(
-        "--no-pandoc",
-        action="store_true",
-        help="Output will be cleaned HTML instead of Markdown. This option is primarily for debugging.",
-    )
-    ap.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="Increase the amount of output describing the operation of doc2md. This flag can be repeated to increase verbosity even more.",
-    )
-    ap.add_argument(
-        "--no-format",
-        action="store_true",
-        help="Output will not be reformatted with mdformat. If --no-pandoc is supplied, then this option does nothing.",
-    )
-
-    args = ap.parse_args(argv)
-
-    log_level = {0: logging.WARN, 1: logging.INFO}.get(args.verbose, logging.DEBUG)
-
-    logging.basicConfig(format="%(levelname)s: %(message)s", level=log_level)
-    logging.getLogger("markdown_it").setLevel(logging.WARN)
-
-    path: Path = args.input
-    output_path: Path = args.output
-
-    soup = BeautifulSoup(path.read_text(), "lxml")
-    mark_code_blocks(soup)
-    replace_style_spans(soup)
-    fix_google_links(soup)
-    remove_ids(soup)
-    remove_classes(soup)
-    remove_styles(soup)
-    identify_code_blocks(soup)
-    fix_backticks(soup)
-    remove_empty_paras(soup)
-
-    if args.no_pandoc:
-        info("No pandoc")
-        output_path.write_text(str(soup))
-    else:
-        pandoc = Popen(
-            [
-                "pandoc",
-                "--to",
-                "gfm-raw_html+pipe_tables",
-                "-f",
-                "html-native_divs-native_spans-raw_html",
-                "-o",
-                str(output_path),
-            ],
-            stdin=PIPE,
-            text=True,
-        )
-
-        pandoc.communicate(input=str(soup))
-        pandoc.wait()
-
-        if not args.no_format:
-            mdformat.file(
-                output_path,
-                options={
-                    "wrap": "no",
-                },
-                extensions={"gfm"},
-            )
-
-
-if __name__ == "__main__":
-    main()

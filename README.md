@@ -71,6 +71,7 @@ hover over the row and click on the pin icon that appears to the left.
 - Resulting Markdown occasionally includes a backslash followed by line-break character. Need to identify why it's happening and fix.
 - Is there a way to manage images better?
 - Can captions in the doc automatically be applied to the associated image?
+- Remove single-cell tables (keep the contents). 
 
 --------
-Made with 💚 for my colleagues at MongoDB by Judy2k.
+Made with 💚 for my colleagues at MongoDB, by Judy2k.
