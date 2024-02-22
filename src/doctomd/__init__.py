@@ -104,6 +104,10 @@ def mark_code_blocks(soup: BeautifulSoup):
     Attempts to find consecutive lines of code and concatenate them into a single
     code block contained within a <pre> tag.
     """
+    # TODO: For this to work consistently, it needs to have a tag and modify approach.
+    # Step 1: Identify all code tokens
+    # Step 2: Consolidate consecutive code tokens
+    # Step 3: Identify and resolve code blocks (<pre>) vs code spans (<code>).
     code_styles = extract_code_styles(soup)
     for span in soup.find_all("span", class_=code_styles):
         p = span.parent
