@@ -190,15 +190,41 @@ def identify_code_blocks(soup: BeautifulSoup):
 
 
 def fix_backticks(soup: BeautifulSoup):
+    """
+    Replace backticks (`) in the content with <code> tags.
+    """
+
     soup.smooth()  # Relies on adjacent strings being concatenated.
+
+    # Loop through any tag with content that includes a backtick.
     for tag in soup.find_all(True, string=re.compile(r"`")):
-        new_contents = (
-            BeautifulSoup(re.sub(r"`(.*?)`", r"<code>\1</code>", tag.string), "lxml")
-            .html.body.p.extract()
-            .contents
-        )
-        tag.clear()
-        tag.extend(new_contents)
+        # Do a regex substitution to create the code tags.
+        # Then re-parse with bs4, and insert the new content into the existing tag.
+        # If there's a better way to re-create the tag soup from the substituted
+        # string, I'd love to know it.
+
+        # From the bs4 docs: If a tag’s only child is another tag, and that tag
+        # has a .string, then the parent tag is considered to have the same
+        # .string as its child.
+        # ☝🏻 This is quite annoying behaviour.
+
+        if not (len(tag.contents) == 1 and isinstance(tag.contents[0], Tag)):
+            content_body = BeautifulSoup(
+                re.sub(r"`(.*?)`", r"<code>\1</code>", tag.string), "lxml"
+            ).html.body
+            if content_body.p is not None:
+                nop = False
+                tag_to_extract = content_body.p
+            else:
+                print("Before:", tag)
+                print("string:", tag.string)
+                nop = True
+                tag_to_extract = content_body
+            new_contents = tag_to_extract.extract().contents
+            tag.clear()
+            tag.extend(new_contents)
+            if nop:
+                print("After:", tag)
 
 
 def remove_empty_paras(soup: BeautifulSoup):
