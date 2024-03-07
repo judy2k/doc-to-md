@@ -207,24 +207,17 @@ def fix_backticks(soup: BeautifulSoup):
         # has a .string, then the parent tag is considered to have the same
         # .string as its child.
         # ☝🏻 This is quite annoying behaviour.
-
         if not (len(tag.contents) == 1 and isinstance(tag.contents[0], Tag)):
             content_body = BeautifulSoup(
                 re.sub(r"`(.*?)`", r"<code>\1</code>", tag.string), "lxml"
             ).html.body
             if content_body.p is not None:
-                nop = False
                 tag_to_extract = content_body.p
             else:
-                print("Before:", tag)
-                print("string:", tag.string)
-                nop = True
                 tag_to_extract = content_body
             new_contents = tag_to_extract.extract().contents
             tag.clear()
             tag.extend(new_contents)
-            if nop:
-                print("After:", tag)
 
 
 def remove_empty_paras(soup: BeautifulSoup):

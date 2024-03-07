@@ -14,6 +14,7 @@ Markdown that's suitable for pasting into ContentStack.
 - Empty paragraphs are removed
 - Hyperlinks are correctly extracted from Google's nasty tracking links.
 - Bold and italic formatting is maintained where possible.
+- Hide (optionally?) CSS parse warnings.
 - Supports tables!
 
 ## Not (currently) Supported
