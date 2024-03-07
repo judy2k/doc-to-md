@@ -16,8 +16,9 @@ Markdown that's suitable for pasting into ContentStack.
 - Bold and italic formatting is maintained where possible.
 - Supports tables!
 
-### Not (currently) Supported
+## Not (currently) Supported
 
+- Currently, code blocks obtained by "Insert > Building blocks > Code block" are converted very badly.  [#1](https://github.com/judy2k/doc-to-md/issues/1)
 - Images - I can't currently think of a good way to make image upload into ContentStack more seamless, without API access to ContentStack itself. 
 - See the [To Do](#to-do) section.
 
@@ -65,12 +66,8 @@ hover over the row and click on the pin icon that appears to the left.
 
 ![Marking a header row in Google Docs.](images/mark_header_row.png)
 
-## Known Issues
-
-* [#1](https://github.com/judy2k/doc-to-md/issues/1) Currently, code blocks obtained by "Insert > Building blocks > Code block" aren't converted very well.
-
 ## To-Do
-
+- Improve the code that identifies and merges code blocks. ([#3](https://github.com/judy2k/doc-to-md/issues/3)).
 - Use [pypandoc_binary](https://pypi.org/project/pypandoc-binary/) to make it easier to install.
 - ContentStack doesn't support `--` and `---` so replace them (outside of code blocks!) with n-dash and m-dash characters.
 - Resulting Markdown occasionally includes a backslash followed by line-break character. Need to identify why it's happening and fix.
