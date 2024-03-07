@@ -22,6 +22,19 @@ from . import (
 )
 
 
+def process_google_doc_html(soup: BeautifulSoup):
+    remove_single_cell_tables(soup)
+    mark_code_blocks(soup)
+    replace_style_spans(soup)
+    fix_google_links(soup)
+    remove_ids(soup)
+    remove_classes(soup)
+    remove_styles(soup)
+    identify_code_blocks(soup)
+    fix_backticks(soup)
+    remove_empty_paras(soup)
+
+
 def main(argv=sys.argv[1:]):
     ap = ArgumentParser(prog="doc2md", description=__doc__)
     ap.add_argument("input", type=Path)
@@ -55,16 +68,7 @@ def main(argv=sys.argv[1:]):
     output_path: Path = args.output
 
     soup = BeautifulSoup(path.read_text(), "lxml")
-    remove_single_cell_tables(soup)
-    mark_code_blocks(soup)
-    replace_style_spans(soup)
-    fix_google_links(soup)
-    remove_ids(soup)
-    remove_classes(soup)
-    remove_styles(soup)
-    identify_code_blocks(soup)
-    fix_backticks(soup)
-    remove_empty_paras(soup)
+    process_google_doc_html(soup)
 
     if args.no_pandoc:
         info("No pandoc")

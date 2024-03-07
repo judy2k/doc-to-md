@@ -34,6 +34,7 @@ def remove_single_cell_tables(soup: BeautifulSoup):
     """
     Identify single cell tables, and replace them with their cell's contents.
     """
+
     for table in soup.find_all("table"):
         rows = table.find_all("tr")
         if len(rows) == 1:
@@ -226,3 +227,20 @@ def remove_empty_paras(soup: BeautifulSoup):
 
     for tag in soup.find_all(lambda tag: tag.name == "p" and not tag.contents):
         tag.unwrap()
+
+
+def process_google_doc_html(soup: BeautifulSoup):
+    """
+    Run all cleanup processes on the input HTML, modifying the input soup in-place.
+    """
+
+    remove_single_cell_tables(soup)
+    mark_code_blocks(soup)
+    replace_style_spans(soup)
+    fix_google_links(soup)
+    remove_ids(soup)
+    remove_classes(soup)
+    remove_styles(soup)
+    identify_code_blocks(soup)
+    fix_backticks(soup)
+    remove_empty_paras(soup)
