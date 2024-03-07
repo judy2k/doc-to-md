@@ -8,32 +8,7 @@ import sys
 from bs4 import BeautifulSoup
 import mdformat
 
-from . import (
-    mark_code_blocks,
-    replace_style_spans,
-    fix_google_links,
-    fix_backticks,
-    remove_ids,
-    remove_classes,
-    remove_empty_paras,
-    remove_styles,
-    identify_code_blocks,
-    remove_single_cell_tables,
-)
-
-
-def process_google_doc_html(soup: BeautifulSoup):
-    remove_single_cell_tables(soup)
-    mark_code_blocks(soup)
-    replace_style_spans(soup)
-    fix_google_links(soup)
-    remove_ids(soup)
-    remove_classes(soup)
-    remove_styles(soup)
-    identify_code_blocks(soup)
-    fix_backticks(soup)
-    remove_empty_paras(soup)
-
+from . import process_google_doc_html
 
 def main(argv=sys.argv[1:]):
     ap = ArgumentParser(prog="doc2md", description=__doc__)
