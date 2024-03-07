@@ -65,13 +65,18 @@ hover over the row and click on the pin icon that appears to the left.
 
 ![Marking a header row in Google Docs.](images/mark_header_row.png)
 
+## Known Issues
+
+* [#1](https://github.com/judy2k/doc-to-md/issues/1) Currently, code blocks obtained by "Insert > Building blocks > Code block" aren't converted very well.
+
 ## To-Do
 
+- Use [pypandoc_binary](https://pypi.org/project/pypandoc-binary/) to make it easier to install.
 - ContentStack doesn't support `--` and `---` so replace them (outside of code blocks!) with n-dash and m-dash characters.
 - Resulting Markdown occasionally includes a backslash followed by line-break character. Need to identify why it's happening and fix.
 - Is there a way to manage images better?
 - Can captions in the doc automatically be applied to the associated image?
-- Remove single-cell tables (keep the contents). 
+- Ensure backticks aren't messed up inside code blocks.
 
 --------
 Made with 💚 for my colleagues at MongoDB, by Judy2k.
