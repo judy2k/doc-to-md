@@ -7,7 +7,7 @@ def test_fix_backticks():
     """
     Ensure fix_backticks doesn't remove intermediate tags.
     """
-    from doctomd import fix_backticks
+    from doctomd import HTMLCleaner
 
     soup = BeautifulSoup(
         """
@@ -21,8 +21,8 @@ def test_fix_backticks():
         """,
         "lxml",
     )
-
-    fix_backticks(soup)
+    cleaner = HTMLCleaner()
+    cleaner.fix_backticks(soup)
 
     assert soup.html.body.p is not None
     assert soup.html.body.p.a is not None

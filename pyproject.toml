@@ -21,7 +21,8 @@ dependencies = [
     "cssutils ~= 2.9.0",
     "mdformat ~= 0.7.17",
     "mdformat-gfm ~= 0.3.5",
-    "lxml ~= 4.9.3"
+    "lxml ~= 4.9.3",
+    "rich ~= 13.7",
 ]
 
 [project.urls]
