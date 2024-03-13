@@ -16,6 +16,14 @@ from bs4 import BeautifulSoup, Tag
 from cssutils import CSSParser
 
 
+def flatten_html_line(line: Tag) -> str:
+    for br in line.find_all("br"):
+        br.replace_with("\n")
+    line.smooth()
+    result = re.sub(r"\n\s+", r" ", "".join(line.strings))
+    return result
+
+
 def is_code_font(f: str):
     """
     Determines if the font name provided as `f` is considered to be a code font.
@@ -186,6 +194,46 @@ class HTMLCleaner:
             if "import " in code or "def " in code:
                 pre["class"] = "python"
 
+    def process_building_block_code(self, soup: BeautifulSoup):
+        """
+        Replace Code Building Blocks that can be inserted into a Google Doc with
+        a <pre> containing unformatted code.
+
+        This is made easier because the generated HTML starts with a paragraph
+        containing <span>&#60419;</span> and ends with a paragraph containing
+        <span>&#60418;</span>
+        """
+
+        # The first line of a code block is identified by a <span> containing &#60419:
+        for start_span in soup.find_all("span", string="\uEC03"):
+            line_paras = []
+            start_para: Tag = start_span.parent
+            line_paras.append(start_para)
+            start_span.decompose()  # Remove the span with the weird character
+
+            # Add all the start paras siblings until one contains the end span:
+            for para in start_para.next_siblings:
+                # Ignore any whitespace between p tags.
+                if isinstance(para, Tag):
+                    line_paras.append(para)
+                    end_span = para.find("span", string="\uEC02")
+                    if end_span is not None:
+                        end_span.decompose()  # Remove the span with the weird character
+                        break
+            code_content = "\n".join(
+                flatten_html_line(line) for line in line_paras
+            ).translate(str.maketrans("\xa0", " "))
+
+            pre = soup.new_tag("pre")
+            pre.string = code_content
+
+            start_para.insert_before(pre)
+            for line in line_paras:
+                line.decompose()
+
+            # Remove non-breaking spaces:
+            # start_para.string = start_para.string.translate(str.maketrans("\xa0", " "))
+
     def fix_backticks(self, soup: BeautifulSoup):
         """
         Replace backticks (`) in the content with <code> tags.
@@ -236,6 +284,8 @@ def process_google_doc_html(soup: BeautifulSoup, log=default_log):
     cleaner = HTMLCleaner()
     log("Fixing single-cell tables")
     cleaner.remove_single_cell_tables(soup)
+    log("Marking up Code Building Blocks")
+    cleaner.process_building_block_code(soup)
     log("Marking code blocks")
     cleaner.mark_code_blocks(soup)
     log("Replacing style spans with <i> and <b>")

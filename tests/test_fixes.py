@@ -117,6 +117,60 @@ def test_code_paragraphs_become_pre():
     assert soup.html.body.pre.string == "def this_should_be_pre()"
 
 
+def test_google_doc_code_blocks():
+    """
+    Ensure that Code Building Blocks are correctly disentangled.
+    """
+    input = """
+<p class="c3"><span>&#60419;</span><span class="c6">&nbsp; &nbsp; </span><span class="c17 c6">def</span><span
+            class="c6">&nbsp;</span><span class="c0">identify_code_blocks(self,</span><span
+            class="c6">&nbsp;</span><span class="c0">soup:</span><span class="c6">&nbsp;</span><span
+            class="c0 c21">BeautifulSoup):</span></p>
+    <p class="c3"><span class="c0">&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="c6 c23">&quot;&quot;&quot; There&#39;s an empty
+            line below on purpose. &quot;&quot;&quot;<br></span></p>
+    <p class="c3"><span class="c6">&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="c17 c6">for</span><span
+            class="c6">&nbsp;</span><span class="c0">pre</span><span class="c6">&nbsp;</span><span
+            class="c17 c6">in</span><span class="c6">&nbsp;</span><span class="c0">soup.find_all(</span><span
+            class="c9 c6">&quot;pre&quot;</span><span class="c0">):</span></p>
+    <p class="c3"><span class="c6">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="c0">code</span><span
+            class="c6">&nbsp;</span><span class="c0">=</span><span class="c6">&nbsp;</span><span
+            class="c6 c9">&quot;&quot;</span><span class="c0">.join(pre.contents)</span></p>
+    <p class="c3"><span class="c6">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="c17 c6">if</span><span
+            class="c6">&nbsp;</span><span class="c9 c6">&quot;import &quot;</span><span class="c6">&nbsp;</span><span
+            class="c17 c6">in</span><span class="c6">&nbsp;</span><span class="c0">code</span><span
+            class="c6">&nbsp;</span><span class="c0">or</span><span class="c6">&nbsp;</span><span
+            class="c9 c6">&quot;def &quot;</span><span class="c6">&nbsp;</span><span class="c17 c6">in</span><span
+            class="c6">&nbsp;</span><span class="c0">code:</span></p>
+    <p class="c3"><span class="c6">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span
+            class="c0">pre[</span><span class="c9 c6">&quot;class&quot;</span><span class="c0">]</span><span
+            class="c6">&nbsp;</span><span class="c0">=</span><span class="c6">&nbsp;</span><span
+            class="c9 c6">&quot;python&quot;</span></p>
+    <p class="c3 c12"><span class="c5"></span></p>
+    <p class="c3"><span class="c1">&#60418;</span></p>
+"""
+    from doctomd import HTMLCleaner
+
+    cleaner = HTMLCleaner()
+    soup = BeautifulSoup(input, "lxml")
+
+    cleaner.process_building_block_code(soup)
+
+    assert soup.html.body.pre is not None
+    print(f"String: {soup.html.body.pre.string!r}")
+    assert (
+        soup.html.body.pre.string
+        == '''    def identify_code_blocks(self, soup: BeautifulSoup):
+        """ There's an empty line below on purpose. """
+
+        for pre in soup.find_all("pre"):
+            code = "".join(pre.contents)
+            if "import " in code or "def " in code:
+                pre["class"] = "python"
+
+'''
+    )
+
+
 def test_merge_adjacent_code_spans():
     """
     process_google_doc_html combines adjacent <code> spans.
