@@ -11,6 +11,7 @@ Markdown that's suitable for pasting into ContentStack.
   - Firstly, the script will identify any code blocks (formatted using Fira Code, Roboto Mono, Source Code Pro, or Courier New) and will mark them as code blocks in the resulting Markdown.
   - Some basic heuristics are used to annotate code blocks as python code
   - Inline code can be correctly identified using backticks (the same as Markdown itself) or formatting (any spans marked with a code font).
+  - **Code building blocks** are now supported!
 - Empty paragraphs are removed
 - Hyperlinks are correctly extracted from Google's nasty tracking links.
 - Bold and italic formatting is maintained where possible.
@@ -19,7 +20,6 @@ Markdown that's suitable for pasting into ContentStack.
 
 ## Not (currently) Supported
 
-- Currently, code blocks obtained by "Insert > Building blocks > Code block" are converted very badly.  [#1](https://github.com/judy2k/doc-to-md/issues/1)
 - Images - I can't currently think of a good way to make image upload into ContentStack more seamless, without API access to ContentStack itself. 
 - See the [To Do](#to-do) section.
 
