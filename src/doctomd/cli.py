@@ -86,18 +86,18 @@ def main(argv=sys.argv[1:]):
                     stdin=PIPE,
                     text=True,
                 )
-        with console.status("Converting to Markdown"):
-            pandoc.communicate(input=str(soup))
-            pandoc.wait()
+                with console.status("Converting to Markdown"):
+                    pandoc.communicate(input=str(soup))
+                    pandoc.wait()
 
-            if not args.no_format:
-                mdformat.file(
-                    output_path,
-                    options={
-                        "wrap": "no",
-                    },
-                    extensions={"gfm"},
-                )
+                    if not args.no_format:
+                        mdformat.file(
+                            output_path,
+                            options={
+                                "wrap": "no",
+                            },
+                            extensions={"gfm"},
+                        )
     except KeyboardInterrupt:
         pass
     except Exception:
