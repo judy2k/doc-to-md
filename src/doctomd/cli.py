@@ -2,15 +2,13 @@ from argparse import ArgumentParser
 import logging
 from logging import info
 from pathlib import Path
-from subprocess import Popen, PIPE
 import sys
 
 from bs4 import BeautifulSoup
-import mdformat
 from rich.console import Console
 from rich.logging import RichHandler
 
-from . import process_google_doc_html
+from . import process_google_doc_html, do_pandoc_pypandoc
 
 def main(argv=sys.argv[1:]):
     console = Console(stderr=True, highlight=False)
@@ -58,7 +56,7 @@ def main(argv=sys.argv[1:]):
             ap.error(f"Input path {path} should be a file, not a directory")
 
         if output_path.is_dir():
-            ap.error(f"Output path is a directory, which is not supported.")
+            ap.error(f"Output path {path} is a directory, which is not supported.")
         if not output_path.parent.is_dir() and not output_path.parent.is_symlink():
             ap.error(
                 f"Can't write to path {output_path.parent} because it doesn't exist or isn't a directory."
@@ -69,35 +67,12 @@ def main(argv=sys.argv[1:]):
         with console.status("Pre-processing HTML"):
             process_google_doc_html(soup, log=console.out)
 
-            if args.no_pandoc:
-                info("No pandoc")
-                output_path.write_text(str(soup))
-            else:
-                pandoc = Popen(
-                    [
-                        "pandoc",
-                        "--to",
-                        "gfm-raw_html+pipe_tables",
-                        "-f",
-                        "html-native_divs-native_spans-raw_html",
-                        "-o",
-                        str(output_path),
-                    ],
-                    stdin=PIPE,
-                    text=True,
-                )
-                with console.status("Converting to Markdown"):
-                    pandoc.communicate(input=str(soup))
-                    pandoc.wait()
-
-                    if not args.no_format:
-                        mdformat.file(
-                            output_path,
-                            options={
-                                "wrap": "no",
-                            },
-                            extensions={"gfm"},
-                        )
+        if args.no_pandoc:
+            info("No pandoc")
+            output_path.write_text(str(soup))
+        else:
+            with console.status("Converting to Markdown"):
+                do_pandoc_pypandoc(soup, output_path, not args.no_format)
     except KeyboardInterrupt:
         pass
     except Exception:

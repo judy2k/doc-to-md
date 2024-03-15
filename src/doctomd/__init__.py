@@ -5,15 +5,17 @@ A small command-line utility for converting Google Docs documents to Markdown
 that's suitable for pasting into ContentStack.
 """
 
-import logging
 from logging import debug, info, getLogger
+from pathlib import Path
 import re
-
+from subprocess import Popen, PIPE
 from typing import List
 from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup, Tag
 from cssutils import CSSParser
+import mdformat
+import pypandoc
 
 
 def flatten_html_line(line: Tag) -> str:
@@ -304,3 +306,56 @@ def process_google_doc_html(soup: BeautifulSoup, log=default_log):
     cleaner.fix_backticks(soup)
     log("Removing empty paragraphs")
     cleaner.remove_empty_paras(soup)
+
+
+def do_pandoc_pypandoc(soup: BeautifulSoup, output_path: Path, format: bool):
+
+    output = pypandoc.convert_text(
+        str(soup),
+        "gfm-raw_html+pipe_tables",  # output format
+        format="html-native_divs-native_spans-raw_html",  # input format
+    )
+    if format:
+        output = mdformat.text(
+            output,
+            options={
+                "wrap": "no",
+            },
+            extensions={"gfm"},
+        )
+    output_path.write_text(output)
+
+
+def do_pandoc_subprocess(soup: BeautifulSoup, output_path: Path, format: bool):
+    """
+    Run pandoc in a subprocess to convert soup HTML into Markdown.
+
+    soup: The HTML source as a BeautifulSoup object.
+    output_path: A pathlib.Path specifying an output file.
+    format: Whether to run the output Markdown through mdformat after conversion.
+    """
+    pandoc = Popen(
+        [
+            "pandoc",
+            "--to",
+            "gfm-raw_html+pipe_tables",
+            "-f",
+            "html-native_divs-native_spans-raw_html",
+            "-o",
+            str(output_path),
+        ],
+        stdin=PIPE,
+        text=True,
+    )
+
+    pandoc.communicate(input=str(soup))
+    pandoc.wait()
+
+    if format:
+        mdformat.file(
+            output_path,
+            options={
+                "wrap": "no",
+            },
+            extensions={"gfm"},
+        )
