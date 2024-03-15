@@ -26,11 +26,6 @@ Markdown that's suitable for pasting into ContentStack.
 ## Installation
 
 ```
-brew install pandoc    # <- MacOS or Linuxbrew
-# apt install pandoc   # <- Debian/Ubuntu
-# choco install pandoc # <- Windows with Chocolatey
-# ... or see here for more instructions: https://pandoc.org/installing.html
-
 python -m pip install --upgrade git+https://github.com/judy2k/doc-to-md.git
 
 # Check that it worked:
@@ -69,7 +64,6 @@ hover over the row and click on the pin icon that appears to the left.
 
 ## To-Do
 - Improve the code that identifies and merges code blocks. ([#3](https://github.com/judy2k/doc-to-md/issues/3)).
-- Use [pypandoc_binary](https://pypi.org/project/pypandoc-binary/) to make it easier to install.
 - ContentStack doesn't support `--` and `---` so replace them (outside of code blocks!) with n-dash and m-dash characters.
 - Resulting Markdown occasionally includes a backslash followed by line-break character. Need to identify why it's happening and fix.
 - Is there a way to manage images better?
