@@ -32,3 +32,11 @@ Issues = "https://github.com/judy2k/doc-to-md/issues"
 
 [project.scripts]
 doc2md = "doctomd.cli:main"
+
+[project.optional-dependencies]
+dev = [
+  "ruff",
+]
+test = [
+  "pytest",
+]
