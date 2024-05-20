@@ -171,6 +171,55 @@ def test_google_doc_code_blocks():
     )
 
 
+def test_google_code_blocks_with_adjacent_text():
+    """
+    There was a bug where if no blank line was left before and after a google code block then the results were messed up.
+    """
+
+    # Google Doc: para, code block, para
+    input = """<body class="c3 doc-content">
+    <p class="c0"><span class="c2">This is some text that is immediately followed by a code block, with no blank line.</span></p>
+    <p class="c0"><span>&#60419;</span><span class="c4">import</span><span class="c8">&nbsp;</span><span
+            class="c5">pytest</span></p>
+    <p class="c0 c6"><span class="c1"></span></p>
+    <p class="c0"><span class="c4">def </span><span class="c5 c9">test_contiguous_building_block():</span></p>
+    <p class="c0"><span class="c5">&nbsp; &nbsp; </span><span class="c7">&quot;&quot;&quot; This has been written to fix
+            a problem where code blocks are not correctly separated from the paragraphs immediately above and below.
+            &quot;&quot;&quot;</span></p>
+    <p class="c0"><span class="c5">&nbsp; &nbsp; </span><span class="c4">pass</span></p>
+    <p class="c0"><span class="c2">&#60418;And this is the next paragraph, that should be normal text.</span></p>
+</body>"""
+
+    from doctomd import HTMLCleaner
+
+    cleaner = HTMLCleaner()
+    soup = BeautifulSoup(input, "lxml")
+
+    cleaner.process_building_block_code(soup)
+
+    assert soup.html.body.pre is not None
+    assert (
+        soup.html.body.p.string.strip()
+        == """
+This is some text that is immediately followed by a code block, with no blank line.
+""".strip()
+    )
+
+    assert (
+        soup.html.body.pre.string.strip()
+        == '''
+import pytest
+
+def test_contiguous_building_block():
+    """ This has been written to fix a problem where code blocks are not correctly separated from the paragraphs immediately above and below. """
+	pass
+'''.strip()
+    )
+
+    print(soup)
+    fail()
+
+
 def test_merge_adjacent_code_spans():
     """
     process_google_doc_html combines adjacent <code> spans.
