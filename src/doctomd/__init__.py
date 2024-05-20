@@ -217,11 +217,14 @@ class HTMLCleaner:
             for para in start_para.next_siblings:
                 # Ignore any whitespace between p tags.
                 if isinstance(para, Tag):
-                    line_paras.append(para)
-                    end_span = para.find("span", string="\uEC02")
+                    end_span = para.find("span", string=re.compile("^\uEC02"))
                     if end_span is not None:
-                        end_span.decompose()  # Remove the span with the weird character
+                        end_span.string = end_span.string[
+                            1:
+                        ]  # Remove the span with the weird character
                         break
+                    else:
+                        line_paras.append(para)
             code_content = "\n".join(
                 flatten_html_line(line) for line in line_paras
             ).translate(str.maketrans("\xa0", " "))

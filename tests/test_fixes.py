@@ -156,7 +156,6 @@ def test_google_doc_code_blocks():
     cleaner.process_building_block_code(soup)
 
     assert soup.html.body.pre is not None
-    print(f"String: {soup.html.body.pre.string!r}")
     assert (
         soup.html.body.pre.string
         == '''    def identify_code_blocks(self, soup: BeautifulSoup):
@@ -166,7 +165,6 @@ def test_google_doc_code_blocks():
             code = "".join(pre.contents)
             if "import " in code or "def " in code:
                 pre["class"] = "python"
-
 '''
     )
 
@@ -188,6 +186,8 @@ def test_google_code_blocks_with_adjacent_text():
             &quot;&quot;&quot;</span></p>
     <p class="c0"><span class="c5">&nbsp; &nbsp; </span><span class="c4">pass</span></p>
     <p class="c0"><span class="c2">&#60418;And this is the next paragraph, that should be normal text.</span></p>
+    <p class="c0"><span class="c2">Yet another paragraph, that should be normal text.</span></p>
+
 </body>"""
 
     from doctomd import HTMLCleaner
@@ -205,6 +205,8 @@ This is some text that is immediately followed by a code block, with no blank li
 """.strip()
     )
 
+    print(str(soup))
+
     assert (
         soup.html.body.pre.string.strip()
         == '''
@@ -212,12 +214,15 @@ import pytest
 
 def test_contiguous_building_block():
     """ This has been written to fix a problem where code blocks are not correctly separated from the paragraphs immediately above and below. """
-	pass
+    pass
 '''.strip()
     )
-
-    print(soup)
-    fail()
+    next_p = soup.html.body.pre.find_next_sibling("p")
+    assert next_p is not None
+    assert (
+        next_p.span.string
+        == "And this is the next paragraph, that should be normal text."
+    )
 
 
 def test_merge_adjacent_code_spans():
