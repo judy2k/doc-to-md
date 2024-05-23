@@ -32,6 +32,7 @@ Issues = "https://github.com/judy2k/doc-to-md/issues"
 
 [project.scripts]
 doc2md = "doctomd.cli:main"
+doc2md-gui = "doctomd.gui:main"
 
 [project.optional-dependencies]
 dev = [
@@ -39,4 +40,7 @@ dev = [
 ]
 test = [
   "pytest",
+]
+gui = [
+  "toga == 0.4.4",
 ]

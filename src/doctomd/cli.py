@@ -22,8 +22,7 @@ def main(argv=sys.argv[1:]):
 
     try:
         ap = ArgumentParser(prog="doc2md", description=__doc__)
-        ap.add_argument("input", type=Path)
-        ap.add_argument("output", type=Path)
+
         ap.add_argument(
             "--no-pandoc",
             action="store_true",
@@ -41,6 +40,9 @@ def main(argv=sys.argv[1:]):
             default=0,
             help="Increase the amount of output describing the operation of doc2md. This flag can be repeated to increase verbosity even more.",
         )
+
+        ap.add_argument("input", type=Path)
+        ap.add_argument("output", type=Path)
 
         args = ap.parse_args(argv)
 
@@ -73,6 +75,7 @@ def main(argv=sys.argv[1:]):
         else:
             with console.status("Converting to Markdown"):
                 do_pandoc_pypandoc(soup, output_path, not args.no_format)
+
     except KeyboardInterrupt:
         pass
     except Exception:
