@@ -37,6 +37,8 @@ doc2md-gui = "doctomd.gui:main"
 [project.optional-dependencies]
 dev = [
   "ruff",
+  "pillow",
+  "briefcase",
 ]
 test = [
   "pytest",
@@ -44,3 +46,30 @@ test = [
 gui = [
   "toga == 0.4.4",
 ]
+
+
+# content below this line added by briefcase convert
+# This project was generated with 0.3.18 using template: https://github.com/beeware/briefcase-template@v0.3.18
+[tool.briefcase]
+project_name = "Google Doc Converter"
+bundle = "uk.co.judy.doctomd"
+version = "0.0.1"
+url = "https://github.com/judy2k/doc-to-md"
+license = "Apache Software License"
+author = "Mark Smith"
+author_email = "mark.smith@mongodb.com"
+
+[tool.briefcase.app.doctomd]
+formal_name = "Google Doc Converter"
+icon = "assets/1x/app_icon"
+installer_icon = "assets/1x/app_icon"
+description = "A utility to generate Markdown for ContentStack."
+long_description = """More details about the app should go here.
+"""
+sources = [
+    "src/doctomd",
+]
+test_sources = [
+    "tests",
+]
+

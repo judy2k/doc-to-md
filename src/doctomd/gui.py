@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 import toga
-from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, Pack
+from toga.style.pack import COLUMN, ROW
 
 from bs4 import BeautifulSoup
 
@@ -25,6 +25,7 @@ class LogWidgetHandler(Handler):
 
     def emit_in_loop(self, record: LogRecord):
         self._multiline.value += record.getMessage() + "\n"
+        self._multiline.scroll_to_bottom()
 
 
 def do_conversion(input_path, output_path):
@@ -49,17 +50,24 @@ class DocConverter(toga.App):
         self.input_file = input
 
         super().__init__(
-            "Google Doc Converter", "judy2k.gdoc2md", startup=DocConverter._build
+            "Google Doc Converter",
+            "judy2k.gdoc2md",
+            startup=DocConverter._build,
+            icon="resources/app_icon.png",
         )
 
     def _build(self):
+        # Components
+        root_box = toga.Box()
+        body_box = toga.Box()
 
-        box = toga.Box()
+        banner = toga.ImageView(toga.Image("resources/banner.png"))
+
         self.convert_button = convert_button = toga.Button("Convert")
         convert_button.style.padding_top = 10
 
         log_text = toga.MultilineTextInput(readonly=True)
-        log_text.style = Pack(background_color="#ffffff", padding_top=10, flex=True)
+        log_text.style.update(background_color="#ffffff", padding_top=10, flex=True)
 
         # Events:
         logging.getLogger().addHandler(LogWidgetHandler(log_text))
@@ -76,18 +84,22 @@ class DocConverter(toga.App):
 
         convert_button.on_press = on_convert
 
+        # Layout:
+        body_box.add(self._input_widgets())
+        body_box.add(convert_button)
+        body_box.add(log_text)
+        body_box.style.update(direction=COLUMN, padding=10, flex=True)
+
         # Compose:
+        root_box.add(banner)
+        root_box.add(body_box)
 
-        box.add(self._input_widgets())
-        box.add(convert_button)
-        box.add(log_text)
-
-        box.style.update(direction=COLUMN, padding=10)
+        root_box.style.update(direction=COLUMN)
 
         # Initial state:
         self.set_input_path(self.input_file)
 
-        return box
+        return root_box
 
     def set_input_path(self, value: str | None):
         self.input_file_text_input.value = value
@@ -96,7 +108,9 @@ class DocConverter(toga.App):
     def _input_widgets(self):
         # Components:
         input_file_path_label = toga.Label("Google Doc (Exported HTML):")
-        self.input_file_text_input = input_file_text_input = toga.TextInput()
+        self.input_file_text_input = input_file_text_input = toga.TextInput(
+            readonly=True
+        )
         input_file_text_input.style.flex = 1
         input_file_text_input.style.padding = (0, 5)
         select_input = toga.Button("Open …")
