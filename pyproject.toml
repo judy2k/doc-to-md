@@ -66,6 +66,7 @@ installer_icon = "assets/1x/app_icon"
 description = "A utility to generate Markdown for ContentStack."
 long_description = """More details about the app should go here.
 """
+requires = [ "toga" ]
 sources = [
     "src/doctomd",
 ]

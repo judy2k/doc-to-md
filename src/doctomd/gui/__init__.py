@@ -12,7 +12,7 @@ from toga.style.pack import COLUMN, ROW
 
 from bs4 import BeautifulSoup
 
-from . import process_google_doc_html, do_pandoc_pypandoc
+from .. import process_google_doc_html, do_pandoc_pypandoc
 
 
 class LogWidgetHandler(Handler):
